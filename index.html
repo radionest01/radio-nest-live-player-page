@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Radio Nest Player</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      font-family: Arial, sans-serif;
+      color: #fff;
+      text-align: center;
+    }
+    .container {
+      width: 300px;
+      margin: 0 auto;
+      padding-top: 20px;
+    }
+    .art-frame {
+      border: 2px solid #fff;
+      border-radius: 8px;
+      padding: 6px;
+      background: #111;
+    }
+    .art-frame img {
+      width: 100%;
+      border-radius: 4px;
+    }
+    .label {
+      margin-top: 8px;
+      font-weight: bold;
+      font-size: 1em;
+    }
+    .play-button {
+      margin: 12px auto;
+      width: 60px;
+      height: 60px;
+      background: #e00;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .play-icon {
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 15px 0 15px 25px;
+      border-color: transparent transparent transparent #fff;
+    }
+    .pause-icon {
+      display: flex;
+      gap: 6px;
+    }
+    .pause-icon div {
+      width: 8px;
+      height: 30px;
+      background: #fff;
+    }
+    .slider {
+      margin: 12px auto;
+      width: 80%;
+    }
+    .powered {
+      margin-top: 10px;
+      color: #0ff;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="art-frame">
+      <div class="label">iTunes Album Art</div>
+      <img id="albumArt" src="" alt="Album Art">
+    </div>
+
+    <div class="play-button" onclick="togglePlay()">
+      <div id="icon" class="play-icon"></div>
+    </div>
+
+    <div class="label" id="nowPlaying">Metadata Info</div>
+
+    <div class="slider">
+      <input type="range" id="volumeSlider" min="0" max="100" value="100">
+    </div>
+
+    <div class="powered">Powered By Radio Nest</div>
+  </div>
+
+  <audio id="radioStream"></audio>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const streamUrl = params.get("stream") || "";
+    const metadataUrl = params.get("metadata") || "";
+    const fallbackArt = params.get("fallbackArt") || "https://via.placeholder.com/300x300?text=No+Art";
+    const fallbackText = params.get("fallbackText")|| "Live Radio";
+
+    const audio = document.getElementById("radioStream");
+    const icon = document.getElementById("icon");
+    const nowPlaying = document.getElementById("nowPlaying");
+    const albumArt = document.getElementById("albumArt");
+    const volumeSlider = document.getElementById("volumeSlider");
+
+    audio.src = streamUrl;
+    albumArt.src = fallbackArt;
+    nowPlaying.innerText = fallbackText;
+    audio.volume = volumeSlider.value / 100;
+
+    volumeSlider.addEventListener("input", () => {
+      audio.volume = volumeSlider.value / 100;
+    });
+
+    function togglePlay() {
+      if (audio.paused) {
+        audio.play();
+        icon.className = "pause-icon";
+        icon.innerHTML = "<div></div><div></div>";
+      } else {
+        audio.pause();
+        icon.className = "play-icon";
+        icon.innerHTML = "";
+      }
+    }
+
+    async function fetchMetadata() {
+      if (!metadataUrl) return;
+      try {
+        const res = await fetch(metadataUrl);
+        const data = await res.json();
+        if (data.icestats?.source?.title) {
+          nowPlaying.innerText = "Now Playing: " + data.icestats.source.title;
+        }
+      } catch {
+        nowPlaying.innerText = fallbackText;
+      }
+    }
+
+    if (metadataUrl) {
+      setInterval(fetchMetadata, 10000);
+      fetchMetadata();
+    }
+  </script>
+</body>
+</html>
