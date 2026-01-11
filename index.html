@@ -1,148 +1,467 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Radio Nest Player</title>
+  <title>Radio Nest Ultra Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
+    :root {
+      --text: #fff;
+      --subtext: rgba(255,255,255,0.7);
+      --glass: rgba(0,0,0,0.25);
+      --title-color: #fff;
+    }
+
+    .theme-dark {
+      --text: #000;
+      --subtext: rgba(0,0,0,0.7);
+      --glass: rgba(0,0,0,0.18);
+      --title-color: #004a99;
+    }
+
+    .theme-light {
+      --text: #fff;
+      --subtext: rgba(255,255,255,0.7);
+      --glass: rgba(255,255,255,0.06);
+      --title-color: #1a76c8;
+    }
+
     body {
       margin: 0;
-      background: #000;
-      font-family: Arial, sans-serif;
-      color: #fff;
-      text-align: center;
+      padding: 0;
+      font-family: "Montserrat", system-ui, sans-serif;
+      background: transparent;
+      overflow: hidden;
+      height: 100vh;
+      color: var(--text);
     }
-    .container {
-      width: 300px;
-      margin: 0 auto;
-      padding-top: 20px;
+
+    .glass-bg {
+      position: fixed;
+      inset: 0;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: var(--glass);
+      z-index: 1;
+      pointer-events: none;
+      border-radius: 12px;
+      overflow: hidden;
     }
-    .art-frame {
-      border: 2px solid #fff;
-      border-radius: 8px;
-      padding: 6px;
-      background: #111;
-    }
-    .art-frame img {
+
+    .page-wrap {
+      position: relative;
+      z-index: 2;
       width: 100%;
-      border-radius: 4px;
-    }
-    .label {
-      margin-top: 8px;
-      font-weight: bold;
-      font-size: 1em;
-    }
-    .play-button {
-      margin: 12px auto;
-      width: 60px;
-      height: 60px;
-      background: #e00;
-      border-radius: 50%;
+      height: 100vh;
       display: flex;
-      align-items: center;
-      justify-content: center;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 10px 50px 40px 50px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .masthead {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .masthead-title {
+      font-size: 17px;
+      font-weight: 700;
+      text-decoration: underline;
       cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--title-color) !important;
     }
-    .play-icon {
-      width: 0;
-      height: 0;
-      border-style: solid;
-      border-width: 15px 0 15px 25px;
-      border-color: transparent transparent transparent #fff;
+
+    .masthead-sub {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--subtext);
     }
-    .pause-icon {
+
+    /* DESKTOP LAYOUT (restored) */
+    .player-layout {
       display: flex;
-      gap: 6px;
+      flex-direction: row;
+      gap: 40px;
+      align-items: flex-start;
+      flex-wrap: nowrap;
+      overflow: hidden;
     }
-    .pause-icon div {
-      width: 8px;
-      height: 30px;
+
+    .art-wrap {
+      flex: 0 0 400px;
+      aspect-ratio: 1/1;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 22px 40px rgba(0,0,0,0.5);
+      flex-shrink: 0;
+      border-radius: 12px;
+    }
+
+    .art-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+      opacity: 1;
+      transition: opacity 0.4s ease;
+    }
+
+    .art-img.fade {
+      opacity: 0;
+    }
+
+    .fallback-chip {
+      position: absolute;
+      left: 10px;
+      bottom: 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      display: none;
+    }
+
+    .meta-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      align-items: flex-start;
+      overflow: hidden;
+    }
+
+    .onair-label {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .onair-label span {
+      color: #ff9c35;
+    }
+
+    .track-title,
+    .track-artist,
+    .track-sub {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: unset;
+      word-break: break-word;
+    }
+
+    .track-title {
+      font-size: clamp(28px, 4vw, 36px);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .track-artist {
+      font-size: clamp(14px, 2vw, 16px);
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      margin-bottom: 10px;
+      color: var(--subtext);
+    }
+
+    .track-sub {
+      font-size: 14px;
+      color: var(--subtext);
+      margin-bottom: 18px;
+    }
+
+    .play-btn {
+      width: 140px;
+      height: 42px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
       background: #fff;
+      color: #000;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.4);
+      margin-bottom: 15px;
     }
-    .slider {
-      margin: 12px auto;
-      width: 80%;
+
+    .volume-wrap {
+      width: 200px;
     }
-    .powered {
-      margin-top: 10px;
-      color: #0ff;
-      font-size: 0.9em;
+
+    .volume-bar {
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      background: var(--subtext);
+    }
+
+    /* MOBILE + TABLET LAYOUT */
+    @media (max-width: 1024px) {
+
+      .masthead {
+        text-align: center;
+      }
+
+      .masthead-title {
+        margin: 0 auto;
+      }
+
+      .masthead-sub {
+        text-align: center;
+      }
+
+      .player-layout {
+        flex-direction: column;
+        align-items: center;
+        gap: 25px;
+      }
+
+      .meta-wrap {
+        text-align: center;
+        align-items: center;
+        order: 4;
+        width: 100%;
+        max-width: 500px;
+      }
+
+      .art-wrap {
+        width: 100%;
+        max-width: 350px;
+        order: 5;
+      }
+
+      .play-btn {
+        margin: 0 auto;
+        order: 2;
+      }
+
+      .onair-label {
+        order: 3;
+      }
+
+      .track-title {
+        order: 4;
+        font-size: 24px;
+      }
+
+      .track-artist,
+      .track-sub {
+        order: 4;
+      }
+
+      .volume-wrap {
+        display: none;
+      }
     }
   </style>
 </head>
+
 <body>
-  <div class="container">
-    <div class="art-frame">
-      <div class="label">iTunes Album Art</div>
-      <img id="albumArt" src="" alt="Album Art">
+
+  <div class="glass-bg"></div>
+
+  <div class="page-wrap">
+
+    <div class="masthead">
+      <button class="masthead-title" onclick="window.open('https://myradionest.com', '_blank')">RADIO NEST ULTRA PLAYER</button>
+      <div class="masthead-sub">Everything Radio — All in One Nest.</div>
     </div>
 
-    <div class="play-button" onclick="togglePlay()">
-      <div id="icon" class="play-icon"></div>
+    <div class="player-layout">
+
+      <div class="art-wrap">
+        <img id="artwork" class="art-img" src="" alt="">
+        <div id="fallbackChip" class="fallback-chip">NO ARTWORK</div>
+      </div>
+
+      <div class="meta-wrap">
+        <div class="onair-label"><span>●</span> NOW PLAYING</div>
+
+        <div id="trackTitle" class="track-title">Loading…</div>
+        <div id="trackArtist" class="track-artist"></div>
+        <div id="trackSub" class="track-sub"></div>
+
+        <button id="playButton" class="play-btn">PLAY</button>
+
+        <div class="volume-wrap">
+          <input id="volumeBar" class="volume-bar" type="range" min="0" max="100" value="100">
+        </div>
+      </div>
+
     </div>
-
-    <div class="label" id="nowPlaying">Metadata Info</div>
-
-    <div class="slider">
-      <input type="range" id="volumeSlider" min="0" max="100" value="100">
-    </div>
-
-    <div class="powered">Powered By Radio Nest</div>
   </div>
 
-  <audio id="radioStream"></audio>
+<script>
+const params = new URLSearchParams(window.location.search);
+const streamURL = params.get("stream");
+const metaURL = params.get("meta");
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const streamUrl = params.get("stream") || "";
-    const metadataUrl = params.get("metadata") || "";
-    const fallbackArt = params.get("fallbackArt") || "https://via.placeholder.com/300x300?text=No+Art";
-    const fallbackText = params.get("fallbackText")|| "Live Radio";
+function applyTheme(theme) {
+  document.body.classList.remove("theme-light", "theme-dark");
+  const t = (theme || "").toLowerCase();
+  if (t === "light") {
+    document.body.classList.add("theme-light");
+  } else {
+    document.body.classList.add("theme-dark");
+  }
+}
 
-    const audio = document.getElementById("radioStream");
-    const icon = document.getElementById("icon");
-    const nowPlaying = document.getElementById("nowPlaying");
-    const albumArt = document.getElementById("albumArt");
-    const volumeSlider = document.getElementById("volumeSlider");
+document.addEventListener("DOMContentLoaded", () => {
+  applyTheme(params.get("theme"));
+  window.addEventListener("message", (event) => {
+    if (event.data && event.data.theme) {
+      applyTheme(event.data.theme);
+    }
+  });
+});
 
-    audio.src = streamUrl;
-    albumArt.src = fallbackArt;
-    nowPlaying.innerText = fallbackText;
-    audio.volume = volumeSlider.value / 100;
+const audio = new Audio();
+audio.src = streamURL;
+audio.preload = "none";
+audio.crossOrigin = "anonymous";
 
-    volumeSlider.addEventListener("input", () => {
-      audio.volume = volumeSlider.value / 100;
-    });
+const playButton = document.getElementById("playButton");
+const volumeBar = document.getElementById("volumeBar");
 
-    function togglePlay() {
-      if (audio.paused) {
-        audio.play();
-        icon.className = "pause-icon";
-        icon.innerHTML = "<div></div><div></div>";
-      } else {
-        audio.pause();
-        icon.className = "play-icon";
-        icon.innerHTML = "";
+const titleEl = document.getElementById("trackTitle");
+const artistEl = document.getElementById("trackArtist");
+const subEl = document.getElementById("trackSub");
+
+const artworkEl = document.getElementById("artwork");
+const fallbackChip = document.getElementById("fallbackChip");
+
+const FALLBACK_ART =
+  "https://i.ibb.co/sd348dNG/Online-Radio-Album-Art-Fall-Back-1.png";
+
+function applyFallbackMetadata() {
+  titleEl.textContent = "Radio - Live Stream";
+  artistEl.textContent = "";
+  subEl.textContent = "";
+  showFallback();
+}
+
+function showFallback() {
+  if (artworkEl.src !== FALLBACK_ART) {
+    artworkEl.classList.add("fade");
+    setTimeout(() => {
+      artworkEl.src = FALLBACK_ART;
+      artworkEl.classList.remove("fade");
+    }, 200);
+  }
+  fallbackChip.style.display = "none";
+}
+
+playButton.addEventListener("click", () => {
+  if (audio.paused) {
+    audio.play();
+    playButton.textContent = "STOP";
+  } else {
+    audio.pause();
+    playButton.textContent = "PLAY";
+  }
+});
+
+volumeBar?.addEventListener("input", () => {
+  audio.volume = volumeBar.value / 100;
+});
+
+audio.volume = 1.0;
+
+async function fetchMetadata() {
+  if (!metaURL) {
+    applyFallbackMetadata();
+    return;
+  }
+
+  try {
+    const res = await fetch(metaURL + "?_=" + Date.now());
+    const data = await res.json();
+
+    let source = data.icestats && data.icestats.source;
+    if (Array.isArray(source)) source = source[0];
+    source = source || {};
+
+    const title = source.title;
+    const artist = source.artist;
+    const album = source.album;
+
+    if (!title && !artist) {
+      applyFallbackMetadata();
+      return;
+    }
+
+    titleEl.textContent = title || "Radio - Live Stream";
+    artistEl.textContent = artist || "";
+    subEl.textContent = album || "";
+
+    updateArtwork(title, artist);
+
+  } catch {
+    applyFallbackMetadata();
+  }
+}
+
+if (metaURL) {
+  setInterval(fetchMetadata, 5000);
+  fetchMetadata();
+} else {
+  applyFallbackMetadata();
+}
+
+async function updateArtwork(title, artist) {
+  const query = encodeURIComponent(`${title || ""} ${artist || ""}`.trim());
+
+  if (!query) {
+    showFallback();
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `https://itunes.apple.com/search?term=${query}&entity=song&limit=1`
+    );
+    const data = await res.json();
+
+    if (data.results && data.results.length > 0) {
+      let art = data.results[0].artworkUrl100;
+      art = art.replace("100x100bb.jpg", "1200x1200bb.jpg");
+
+      if (artworkEl.src !== art) {
+        artworkEl.classList.add("fade");
+        setTimeout(() => {
+          artworkEl.src = art;
+          artworkEl.classList.remove("fade");
+        }, 200);
       }
-    }
 
-    async function fetchMetadata() {
-      if (!metadataUrl) return;
-      try {
-        const res = await fetch(metadataUrl);
-        const data = await res.json();
-        if (data.icestats?.source?.title) {
-          nowPlaying.innerText = "Now Playing: " + data.icestats.source.title;
-        }
-      } catch {
-        nowPlaying.innerText = fallbackText;
-      }
+      fallbackChip.style.display = "none";
+    } else {
+      showFallback();
     }
+  } catch {
+    showFallback();
+  }
+}
+</script>
 
-    if (metadataUrl) {
-      setInterval(fetchMetadata, 10000);
-      fetchMetadata();
-    }
-  </script>
 </body>
 </html>
